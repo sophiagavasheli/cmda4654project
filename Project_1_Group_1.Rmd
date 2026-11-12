@@ -1,0 +1,49 @@
+---
+title: "title"
+author: "group 1"
+date: "November 30, 2026"
+fontsize: 9pt
+classoption: "aspectratio=169"
+
+output: 
+  beamer_presentation: 
+    fonttheme: professionalfonts
+    highlight: kate
+    theme: Rochester
+
+header-includes:
+  - \definecolor{Navy}{HTML}{000080}
+  - \definecolor{Cream}{HTML}{F7F3E9}
+  - \definecolor{Red}{HTML}{C41E3A}
+
+  - \usecolortheme[named=Navy]{structure}
+
+  - \setbeamercolor{block title}{fg=white,bg=Navy}
+  - \setbeamercolor{block body}{fg=black,bg=Cream}
+
+  - \setbeamercolor{alerted text}{fg=Red}
+
+  - \setbeamertemplate{navigation symbols}{}
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(readr)
+library(dplyr)
+library(ggplot2)
+
+
+knitr::opts_chunk$set(echo = FALSE)
+
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  paste0("\n \\", "footnotesize","\n\n", x, "\n\n \\normalsize")
+})
+
+knitr::opts_chunk$set(comment = "") # removes ##
+
+```
+
+
+## Introduction 

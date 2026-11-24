@@ -1,30 +1,21 @@
 ---
-title: "title"
-author: "group 1"
+title: "Anomaly Detection"
+author: "Sophia Gavasheli, Alex Ross, Diya Kohli, Pooja Challa, and Sarah Marchosky"
 date: "November 30, 2026"
 fontsize: 9pt
 classoption: "aspectratio=169"
 
-output: 
-  beamer_presentation: 
+output:
+  beamer_presentation:
     fonttheme: professionalfonts
     highlight: kate
-    theme: Rochester
+    theme: Antibes
 
 header-includes:
-  - \definecolor{Navy}{HTML}{000080}
-  - \definecolor{Cream}{HTML}{F7F3E9}
-  - \definecolor{Red}{HTML}{C41E3A}
-
-  - \usecolortheme[named=Navy]{structure}
-
-  - \setbeamercolor{block title}{fg=white,bg=Navy}
-  - \setbeamercolor{block body}{fg=black,bg=Cream}
-
-  - \setbeamercolor{alerted text}{fg=Red}
-
+  - \setbeamertemplate{footline}{\hfill\insertframenumber{} / \inserttotalframenumber\hspace{0.3cm}\vspace{0.2cm}}
   - \setbeamertemplate{navigation symbols}{}
 ---
+
 
 ```{r setup, include=FALSE}
 library(knitr)
@@ -41,9 +32,60 @@ knitr::knit_hooks$set(chunk = function(x, options) {
   paste0("\n \\", "footnotesize","\n\n", x, "\n\n \\normalsize")
 })
 
-knitr::opts_chunk$set(comment = "") # removes ##
+knitr::opts_chunk$set(comment = "") # removes ## in output
 
 ```
 
+# Section 1 Alex
 
-## Introduction 
+## Motivation
+
+
+
+## Overview of Methods
+
+types of anomalies
+- point anomaly
+- contextual anomaly
+- collective anomaly
+
+methods for anomaly detection (from wikipedia)
+- Parametric-based: Z-score, Tukey's range test, Grubbs's test
+- Density-based techniques: k-nearest neighbor local outlier factors, isolation forests
+- neural networks (IF and LOF recommended by Lucero when i emailed him)
+- clustering
+- many more
+
+we should prolly focus on teaching the parametric and density methods
+
+## Parametric Methods
+
+## Isolation Forests
+
+## Local Outlier Factors
+
+# Section 2 Sophia
+
+## Baby Example
+
+# Section 3 Diya
+
+## Real Dataset Example
+
+# Section 4 Pooja 
+
+## Real Dataset Example continued
+
+# Section 5 Sarah
+
+## Baseline Comparison
+
+i think our baseline method should be knn bc u can classify outliers with knn:
+"The distance to the kth nearest neighbor can also be seen as a local density estimate and thus is also a popular outlier score"
+
+## Limitations
+
+## Key Takeaways
+
+
+## References

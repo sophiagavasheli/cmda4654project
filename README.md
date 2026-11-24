@@ -1,1 +1,23 @@
 The Rproj file makes it so that this folder is the root directory. Open the project by clicking on the Rproj file and that way we won't have any filepath issues :))
+
+## some overview resources
+https://en.wikipedia.org/wiki/Anomaly_detection
+
+https://en.wikipedia.org/wiki/Local_outlier_factor
+
+https://en.wikipedia.org/wiki/Isolation_forest
+
+https://www.geeksforgeeks.org/machine-learning/outlier-detection-with-local-outlier-factor-lof-using-r/
+
+https://cran.r-project.org/web/packages/isotree/vignettes/An_Introduction_to_Isolation_Forests.html
+
+https://rpubs.com/feitonyliu/IntroAnomalyDetectionIsolationForest
+
+https://statsandr.com/blog/outliers-detection-in-r/
+
+## papers we can cite since we can't cite wikipedia
+https://dl.acm.org/doi/10.1145/1541880.1541882
+
+https://ieeexplore.ieee.org/document/4781136
+
+https://dl.acm.org/doi/10.1145/342009.335388

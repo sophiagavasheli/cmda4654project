@@ -36,56 +36,115 @@ knitr::opts_chunk$set(comment = "") # removes ## in output
 
 ```
 
-# Section 1 Alex
+# 1. Introduction
 
 ## Motivation
 
-
+text
 
 ## Overview of Methods
 
-types of anomalies
+Types of Anomalies
+
 - point anomaly
+
 - contextual anomaly
+
 - collective anomaly
 
-methods for anomaly detection (from wikipedia)
-- Parametric-based: Z-score, Tukey's range test, Grubbs's test
-- Density-based techniques: k-nearest neighbor local outlier factors, isolation forests
-- neural networks (IF and LOF recommended by Lucero when i emailed him)
-- clustering
-- many more
+Methods for anomaly detection:
 
-we should prolly focus on teaching the parametric and density methods
-
-## Parametric Methods
+- **Parametric-based:** Z-score, Grubbs’s test, Dixon’s test, Rosner’s test
+    - Good for small samples, normally distributed data
+    
+- **Proximity-based:**  K-nearest Neighbors, Isolation Forest,
+One-Class Support Vector Machine, Local Outlier Factor, and Clustering-Based
+Local Outlier Factor
+  -  Measure the nearness or closeness between data points. They assumed anomalies are distant from other points
+  
+- **Distance-based:** Histogram-Based Outlier Score, Empirical Cumulative Outlier Detection, and
+Gaussian Mixture Models
+  - Fit a distribution to detect outliers
+  
+- **Ensemble-based:**  IForest, Extreme Gradient Boosting-Based Outlier Detection
+  - Combine methods for better performance
 
 ## Isolation Forests
+text
+
 
 ## Local Outlier Factors
+text
 
-# Section 2 Sophia
+## K-nearest Neighbor Outliers
+text 
 
-## Baby Example
+## Histogram-Based Outlier Score
+text
 
-# Section 3 Diya
+# 2. Baby Example
 
-## Real Dataset Example
+## slide
 
-# Section 4 Pooja 
 
-## Real Dataset Example continued
 
-# Section 5 Sarah
+# 3. Real Dataset Example Part 1
+
+## slide 1
+
+
+## slide 2
+
+
+## slide 3
+
+
+## slide 4
+
+
+## slide 5
+
+# 4. Real Dataset Example Part 2
+
+## slide 1
+
+## slide 2
+
+
+## slide 3
+
+
+## slide 4
+
+
+## slide 5
+
+# 5. Interpretations
 
 ## Baseline Comparison
+text
 
-i think our baseline method should be knn bc u can classify outliers with knn:
-"The distance to the kth nearest neighbor can also be seen as a local density estimate and thus is also a popular outlier score"
+## slide 
+text
+
+## slide
+text
 
 ## Limitations
 
-## Key Takeaways
+text
 
+## Key Takeaways
+text
 
 ## References
+
+Breunig, M. M., Kriegel, H.-P., Ng, R. T., & Sander, J. (2000). LOF: Identifying density-based local outliers. Proceedings of the 2000 ACM SIGMOD International Conference on Management of Data, SIGMOD ’00, 93–104. https://doi.org/10.1145/342009.335388
+
+Chandola, V., Banerjee, A., & Kumar, V. (2009). Anomaly detection: A survey. ACM Computing Surveys (CSUR), 41(3), 15:1-15:58. https://doi.org/10.1145/1541880.1541882
+
+Kuo, C. (2024). Handbook of Anomaly Detection (2nd ed.). Innovation Press.
+
+Liu, F. T., Ting, K. M., & Zhou, Z.-H. (2008). Isolation Forest. 2008 Eighth IEEE International Conference on Data Mining, 413–422. https://doi.org/10.1109/ICDM.2008.17
+
+

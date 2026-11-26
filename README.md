@@ -1,14 +1,10 @@
 The Rproj file makes it so that this folder is the root directory. Open the project by clicking on the Rproj file and that way we won't have any filepath issues :))
 
-## some overview resources
+## TLDR
 https://en.wikipedia.org/wiki/Anomaly_detection
-
-https://en.wikipedia.org/wiki/Local_outlier_factor
-
-https://en.wikipedia.org/wiki/Isolation_forest
-
-## examples
 this handbook has great python examples that can easily be adapted: https://github.com/dataman-git/Handbook-of-anomaly-detection/tree/main
+
+## code examples
 
 https://kunalbharadkar.medium.com/outlier-anomalies-detection-using-unsupervised-machine-learning-8a25e66de85c
 

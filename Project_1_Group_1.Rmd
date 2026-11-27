@@ -22,6 +22,7 @@ library(knitr)
 library(readr)
 library(dplyr)
 library(ggplot2)
+library(patchwork)
 
 
 knitr::opts_chunk$set(echo = FALSE)
@@ -40,9 +41,7 @@ knitr::opts_chunk$set(comment = "") # removes ## in output
 
 ## Motivation
 
-text
-
-## Overview of Methods
+motivation
 
 Types of Anomalies
 
@@ -51,6 +50,8 @@ Types of Anomalies
 - contextual anomaly
 
 - collective anomaly
+
+## Overview of Methods
 
 Methods for anomaly detection:
 
@@ -68,6 +69,13 @@ Gaussian Mixture Models
   
 - **Ensemble-based:**  IForest, Extreme Gradient Boosting-Based Outlier Detection
   - Combine methods for better performance
+  
+The four methods we'll be covering today are unsupervised algorithms:
+
+- Isolation forests
+- Local outlier factors
+- Knn outliers (baseline method)
+- Histogram-based outlier scores
 
 ## Isolation Forests
 text
@@ -84,7 +92,170 @@ text
 
 # 2. Baby Example
 
-## slide
+## Implementing HBOS with Iris
+
+Let's analyze only the Setosa flowers since each flower species has its own distribution of measurements.
+
+```{r, echo=TRUE}
+petal = iris %>% 
+  filter(Species == "setosa") %>% 
+  select(-Species)
+
+X_scaled <- as.data.frame(scale(petal))
+
+## HBOS implementation
+hbos_fit <- function(X, n_bins = 10) {
+  
+  X <- as.data.frame(X)
+  
+  models <- list()
+  
+  for (j in seq_along(X)) {
+    
+    x <- X[[j]]
+    
+    # create equally spaced histogram bins
+    breaks <- seq(min(x), max(x), length.out = n_bins + 1)
+    
+    # count observations in each bin
+    counts <- hist(x, breaks = breaks, plot = FALSE, include.lowest = TRUE)$counts
+    
+    # estimate density for each bin
+    widths <- diff(breaks)
+    
+    densities <- counts / (length(x) * widths)
+    
+    densities[densities == 0] <- 1e-10 # ensure everything is nonzero
+    
+    models[[j]] <- list(breaks = breaks, densities = densities)
+  }
+  
+  return(models)
+}
+
+
+hbos_predict <- function(model, X) {
+  
+  X <- as.data.frame(X)
+  
+  scores <- matrix(0, nrow = nrow(X), ncol = ncol(X))
+  
+  for (j in seq_along(X)) {
+    
+    x <- X[[j]]
+    
+    breaks <- model[[j]]$breaks
+    densities <- model[[j]]$densities
+    
+    # identify the histogram bin for each observation
+    bin <- findInterval(x, breaks)
+    
+    # keep bin indices within valid range
+    bin <- pmax(1, pmin(bin, length(densities)))
+    
+    # calculate negative log density
+    scores[, j] <- -log(densities[bin])
+  }
+  
+  return(rowSums(scores))
+}
+
+hbos_model <- hbos_fit(X_scaled, n_bins = 10)
+iris_scores <- hbos_predict(hbos_model, X_scaled)
+
+contamination <- 0.05 # assume 5% of data is an anomaly
+
+# determine threshold for what's considered an anomaly
+threshold <- quantile(iris_scores, probs = 1 - contamination)
+
+# flag observations above the threshold
+iris_pred <- ifelse(iris_scores > threshold, 1, 0)
+
+cat("HBOS threshold:", threshold, "\n")
+cat("Number of flagged observations:", sum(iris_pred), "\n")
+
+results <- data.frame(
+  Observation = 1:nrow(petal),
+  Sepal.Length = petal$Sepal.Length,
+  Sepal.Width = petal$Sepal.Width,
+  Petal.Length = petal$Petal.Length,
+  Petal.Width = petal$Petal.Width,
+  Anomaly.Score = iris_scores,
+  Anomaly = ifelse(iris_pred == 1, "Outlier", "Normal")
+)
+
+results <- results[order(-results$Anomaly.Score), ]
+
+kable(head(results, 15))
+```
+
+
+## Results
+
+```{r, echo=TRUE}
+hbos_model <- hbos_fit(X_scaled, n_bins = 10)
+iris_scores <- hbos_predict(hbos_model, X_scaled)
+
+contamination <- 0.05 # assume 5% of data is an anomaly
+
+# determine threshold for what's considered an anomaly
+threshold <- quantile(iris_scores, probs = 1 - contamination)
+
+# flag observations above the threshold
+iris_pred <- ifelse(iris_scores > threshold, 1, 0)
+
+cat("HBOS threshold:", threshold, "\n")
+cat("Number of flagged observations:", sum(iris_pred), "\n")
+
+results <- data.frame(
+  Observation = 1:nrow(petal),
+  Sepal.Length = petal$Sepal.Length,
+  Sepal.Width = petal$Sepal.Width,
+  Petal.Length = petal$Petal.Length,
+  Petal.Width = petal$Petal.Width,
+  Anomaly.Score = iris_scores,
+  Anomaly = ifelse(iris_pred == 1, "Outlier", "Normal")
+)
+
+results <- results[order(-results$Anomaly.Score), ]
+
+kable(head(results, 15))
+```
+
+
+## Histogram of Anomaly Scores
+
+```{r, echo=TRUE}
+ggplot(as.data.frame(iris_scores), aes(x = iris_scores)) +
+  geom_histogram(bins = 15, fill = "steelblue") +
+  geom_vline(aes(xintercept = threshold, color = "Anomaly Threshold")) +
+  labs(title = "HBOS Anomaly Scores", x = "Anomaly Score", y = "Count",
+    color = "") + theme(legend.position = "bottom")
+```
+
+## Visualizing Flagged Observations
+
+```{r, echo=TRUE}
+petal$iris_pred <- as.factor(iris_pred)
+
+p1 = ggplot(petal, aes(x = Sepal.Length, y = Sepal.Width, colour = iris_pred)) +
+  geom_point() +
+  scale_color_manual(name = "", values = c("0" = "steelblue", "1" = "red3"),
+    labels = c("0" = "Non-outlier", "1" = "Outlier")) +
+  theme(legend.position = "bottom") +
+  labs(title = "Visualizing Flagged Observations", x = "Sepal Length",
+    y = "Sepal Width")
+
+p2 = ggplot(petal, aes(x = Petal.Length, y = Petal.Width, colour = iris_pred)) +
+  geom_point() +
+    scale_color_manual(name = "", values = c("0" = "steelblue", "1" = "red3"),
+    labels = c("0" = "Non-outlier", "1" = "Outlier")) +
+  theme(legend.position = "none") +
+  labs(x = "Petal Length", y = "Petal Width"
+  )
+
+p1 + p2
+```
 
 
 
@@ -141,10 +312,17 @@ text
 
 Breunig, M. M., Kriegel, H.-P., Ng, R. T., & Sander, J. (2000). LOF: Identifying density-based local outliers. Proceedings of the 2000 ACM SIGMOD International Conference on Management of Data, SIGMOD ’00, 93–104. https://doi.org/10.1145/342009.335388
 
+
 Chandola, V., Banerjee, A., & Kumar, V. (2009). Anomaly detection: A survey. ACM Computing Surveys (CSUR), 41(3), 15:1-15:58. https://doi.org/10.1145/1541880.1541882
 
+
+Goldstein, M., & Dengel, A. (2012). Histogram-based Outlier Score (HBOS): A fast Unsupervised Anomaly Detection Algorithm.
+
+
 Kuo, C. (2024). Handbook of Anomaly Detection (2nd ed.). Innovation Press.
+
 
 Liu, F. T., Ting, K. M., & Zhou, Z.-H. (2008). Isolation Forest. 2008 Eighth IEEE International Conference on Data Mining, 413–422. https://doi.org/10.1109/ICDM.2008.17
 
 
+Ramaswamy, S., Rastogi, R., & Shim, K. (2000). Efficient algorithms for mining outliers from large data sets. ACM SIGMOD Record, 29(2), 427–438. https://doi.org/10.1145/335191.335437

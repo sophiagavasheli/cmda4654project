@@ -96,22 +96,27 @@ text
 
 Let's analyze only the Setosa flowers since each flower species has its own distribution of measurements.
 
+We scale the data to ensure units don't affect whether an observation is considered an outlier.
+$\vspace{0.3cm}$
+
 ```{r, echo=TRUE}
 petal = iris %>% 
   filter(Species == "setosa") %>% 
   select(-Species)
 
 X_scaled <- as.data.frame(scale(petal))
+```
 
-## HBOS implementation
+
+## Fitting HBOS Model
+
+```{r, echo=TRUE}
 hbos_fit <- function(X, n_bins = 10) {
   
   X <- as.data.frame(X)
-  
-  models <- list()
+  models <- list() # store models
   
   for (j in seq_along(X)) {
-    
     x <- X[[j]]
     
     # create equally spaced histogram bins
@@ -122,28 +127,27 @@ hbos_fit <- function(X, n_bins = 10) {
     
     # estimate density for each bin
     widths <- diff(breaks)
-    
     densities <- counts / (length(x) * widths)
-    
     densities[densities == 0] <- 1e-10 # ensure everything is nonzero
     
     models[[j]] <- list(breaks = breaks, densities = densities)
   }
-  
   return(models)
 }
+```
 
 
+## Predicting Anomaly Scores
+
+```{r, echo=TRUE}
 hbos_predict <- function(model, X) {
   
   X <- as.data.frame(X)
-  
-  scores <- matrix(0, nrow = nrow(X), ncol = ncol(X))
+  scores <- matrix(0, nrow = nrow(X), ncol = ncol(X)) # store scores
   
   for (j in seq_along(X)) {
     
     x <- X[[j]]
-    
     breaks <- model[[j]]$breaks
     densities <- model[[j]]$densities
     
@@ -159,10 +163,14 @@ hbos_predict <- function(model, X) {
   
   return(rowSums(scores))
 }
+```
 
+
+## Fit and Identify Anomalies
+
+```{r, echo=TRUE}
 hbos_model <- hbos_fit(X_scaled, n_bins = 10)
 iris_scores <- hbos_predict(hbos_model, X_scaled)
-
 contamination <- 0.05 # assume 5% of data is an anomaly
 
 # determine threshold for what's considered an anomaly
@@ -174,58 +182,35 @@ iris_pred <- ifelse(iris_scores > threshold, 1, 0)
 cat("HBOS threshold:", threshold, "\n")
 cat("Number of flagged observations:", sum(iris_pred), "\n")
 
-results <- data.frame(
-  Observation = 1:nrow(petal),
-  Sepal.Length = petal$Sepal.Length,
-  Sepal.Width = petal$Sepal.Width,
-  Petal.Length = petal$Petal.Length,
-  Petal.Width = petal$Petal.Width,
-  Anomaly.Score = iris_scores,
-  Anomaly = ifelse(iris_pred == 1, "Outlier", "Normal")
-)
+results <- data.frame(Observation = 1:nrow(petal), Sepal.Length = petal$Sepal.Length,
+  Sepal.Width = petal$Sepal.Width, Petal.Length = petal$Petal.Length,
+  Petal.Width = petal$Petal.Width, Anomaly.Score = iris_scores,
+  Anomaly = ifelse(iris_pred == 1, "Outlier", "Normal"))
 
 results <- results[order(-results$Anomaly.Score), ]
-
-kable(head(results, 15))
 ```
 
 
 ## Results
 
-```{r, echo=TRUE}
-hbos_model <- hbos_fit(X_scaled, n_bins = 10)
-iris_scores <- hbos_predict(hbos_model, X_scaled)
+```{r}
+kable(head(results, 15), caption = "Top 15 HBOS Anomaly Scores among the Setosa Species")
 
-contamination <- 0.05 # assume 5% of data is an anomaly
-
-# determine threshold for what's considered an anomaly
-threshold <- quantile(iris_scores, probs = 1 - contamination)
-
-# flag observations above the threshold
-iris_pred <- ifelse(iris_scores > threshold, 1, 0)
-
-cat("HBOS threshold:", threshold, "\n")
-cat("Number of flagged observations:", sum(iris_pred), "\n")
-
-results <- data.frame(
-  Observation = 1:nrow(petal),
-  Sepal.Length = petal$Sepal.Length,
-  Sepal.Width = petal$Sepal.Width,
-  Petal.Length = petal$Petal.Length,
-  Petal.Width = petal$Petal.Width,
-  Anomaly.Score = iris_scores,
-  Anomaly = ifelse(iris_pred == 1, "Outlier", "Normal")
-)
-
-results <- results[order(-results$Anomaly.Score), ]
-
-kable(head(results, 15))
 ```
-
 
 ## Histogram of Anomaly Scores
 
-```{r, echo=TRUE}
+```{r, echo=TRUE, eval = FALSE}
+ggplot(as.data.frame(iris_scores), aes(x = iris_scores)) +
+  geom_histogram(bins = 15, fill = "steelblue") +
+  geom_vline(aes(xintercept = threshold, color = "Anomaly Threshold")) +
+  labs(title = "HBOS Anomaly Scores", x = "Anomaly Score", y = "Count",
+    color = "") + theme(legend.position = "bottom")
+```
+
+## Histogram of Anomaly Scores
+
+```{r}
 ggplot(as.data.frame(iris_scores), aes(x = iris_scores)) +
   geom_histogram(bins = 15, fill = "steelblue") +
   geom_vline(aes(xintercept = threshold, color = "Anomaly Threshold")) +
@@ -235,29 +220,59 @@ ggplot(as.data.frame(iris_scores), aes(x = iris_scores)) +
 
 ## Visualizing Flagged Observations
 
-```{r, echo=TRUE}
+```{r, echo=TRUE, eval = FALSE}
 petal$iris_pred <- as.factor(iris_pred)
 
 p1 = ggplot(petal, aes(x = Sepal.Length, y = Sepal.Width, colour = iris_pred)) +
   geom_point() +
-  scale_color_manual(name = "", values = c("0" = "steelblue", "1" = "red3"),
+  scale_color_manual(name = "", 
+    values = c("0" = "steelblue", "1" = "red3"),
     labels = c("0" = "Non-outlier", "1" = "Outlier")) +
   theme(legend.position = "bottom") +
-  labs(title = "Visualizing Flagged Observations", x = "Sepal Length",
+  labs(
+    title = "Visualizing Flagged Observations", 
+    x = "Sepal Length",
     y = "Sepal Width")
 
 p2 = ggplot(petal, aes(x = Petal.Length, y = Petal.Width, colour = iris_pred)) +
   geom_point() +
-    scale_color_manual(name = "", values = c("0" = "steelblue", "1" = "red3"),
-    labels = c("0" = "Non-outlier", "1" = "Outlier")) +
+    scale_color_manual(name = "", 
+      values = c("0" = "steelblue", "1" = "red3"),
+      labels = c("0" = "Non-outlier", "1" = "Outlier")) +
   theme(legend.position = "none") +
-  labs(x = "Petal Length", y = "Petal Width"
-  )
+  labs(x = "Petal Length", y = "Petal Width")
 
 p1 + p2
 ```
 
+## Visualizing Flagged Observations
 
+```{r}
+petal$iris_pred <- as.factor(iris_pred)
+
+p1 = ggplot(petal, aes(x = Sepal.Length, y = Sepal.Width, colour = iris_pred)) +
+  geom_point() +
+  scale_color_manual(
+    name = "", 
+    values = c("0" = "steelblue", "1" = "red3"),
+    labels = c("0" = "Non-outlier", "1" = "Outlier")) +
+  theme(legend.position = "bottom") +
+  labs(
+    title = "Visualizing Flagged Observations", 
+    x = "Sepal Length",
+    y = "Sepal Width")
+
+p2 = ggplot(petal, aes(x = Petal.Length, y = Petal.Width, colour = iris_pred)) +
+  geom_point() +
+    scale_color_manual(
+      name = "", 
+      values = c("0" = "steelblue", "1" = "red3"),
+      labels = c("0" = "Non-outlier", "1" = "Outlier")) +
+  theme(legend.position = "none") +
+  labs(x = "Petal Length", y = "Petal Width")
+
+p1 + p2
+```
 
 # 3. Real Dataset Example Part 1
 
